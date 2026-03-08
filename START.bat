@@ -23,8 +23,8 @@ if "%NODE_EXE%"=="" (
 
 cd /d "%~dp0"
 
-echo  Installing dependencies...
-%NODE_EXE% -e "require('express')" >nul 2>&1
+echo  Installing / checking dependencies...
+%NODE_EXE% -e "require('express');require('bonjour-service')" >nul 2>&1
 if errorlevel 1 (
   echo  Running npm install...
   call npm install
@@ -32,8 +32,12 @@ if errorlevel 1 (
 
 echo.
 echo  Starting server...
-echo  Open your browser at http://localhost:3000
-echo  Share with colleagues: check the IP address shown below
+echo.
+echo  -----------------------------------------------
+echo   LOCAL:    http://localhost:3000
+echo   HOSTNAME: http://%COMPUTERNAME%.local:3000
+echo             ^^^ USE THIS on tablets - works on any WiFi!
+echo  -----------------------------------------------
 echo.
 echo  Press Ctrl+C to stop the server
 echo.

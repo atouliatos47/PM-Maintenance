@@ -376,6 +376,12 @@ tr:hover td { background:rgba(149,193,31,0.04); }
 
   </div>
   <div class="date-badge" id="dateRangeBadge">📅 Loading...</div>
+  <button id="installBtn" onclick="installPwa()"
+    style="display:none;background:linear-gradient(135deg,var(--accent),#6d8f10);border:none;color:#fff;
+    border-radius:8px;padding:8px 16px;cursor:pointer;font-family:var(--font-head);font-weight:700;
+    font-size:13px;letter-spacing:1px;gap:6px;align-items:center;flex-shrink:0;">
+    ⬇ INSTALL APP
+  </button>
   <div class="nav-btns">
     <button class="nav-btn active" onclick="showView('dashboard')">DASHBOARD</button>
     <button class="nav-btn" onclick="showView('jobs')">PM JOBS</button>
@@ -815,7 +821,26 @@ let allJobs = [];
 let charts  = {};
 
 // ═══════════════════════════════════════════════════════
-// AUTO-RETURN TIMER
+// SERVER INFO — always use hostname URL for QR codes
+// ═══════════════════════════════════════════════════════
+let serverBaseUrl = window.location.origin; // fallback
+
+async function fetchServerInfo() {
+  try {
+    const info = await fetch('/api/server-info').then(r => r.json());
+    // Prefer hostname (.local) — works across WiFi networks
+    serverBaseUrl = info.localUrl;
+    // Show it in the header as a helpful indicator
+    const badge = document.getElementById('dateRangeBadge');
+    if (badge) {
+      badge.title = `Hostname: ${info.localUrl}\nIP: ${info.ipUrl}`;
+    }
+  } catch(e) {
+    serverBaseUrl = window.location.origin;
+  }
+}
+
+
 // ═══════════════════════════════════════════════════════
 let autoReturnTimer = null;
 
@@ -1270,7 +1295,7 @@ function renderStationGrid(stations, stoppages) {
       ? new Date(st.nextPmDate).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})
       : '—';
 
-    const serverOrigin = window.location.origin;
+    const serverOrigin = serverBaseUrl;
     const tabletUrl    = `${serverOrigin}/station/${st.id}`;
 
     return `
@@ -1680,7 +1705,7 @@ async function saveStation() {
   });
 
   // Show step 2 with the URL
-  const url = `${window.location.origin}/station/${id}`;
+  const url = `${serverBaseUrl}/station/${id}`;
   document.getElementById('createdUrl').textContent    = url;
   document.getElementById('urlStationName').textContent = machineName;
   document.getElementById('previewLink').href           = url;
@@ -1744,10 +1769,38 @@ if ('serviceWorker' in navigator) {
 }
 
 // ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+// PWA INSTALL
+// ═══════════════════════════════════════════════════════
+let installPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  installPrompt = e;
+  const btn = document.getElementById('installBtn');
+  btn.style.display = 'flex';
+});
+
+async function installPwa() {
+  if (!installPrompt) return;
+  installPrompt.prompt();
+  const { outcome } = await installPrompt.userChoice;
+  if (outcome === 'accepted') {
+    document.getElementById('installBtn').style.display = 'none';
+    installPrompt = null;
+  }
+}
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installBtn').style.display = 'none';
+  installPrompt = null;
+  toast('✅ App installed successfully!');
+});
+
 // INIT
 // ═══════════════════════════════════════════════════════
 document.getElementById('oeeDate').value = new Date().toISOString().split('T')[0];
-loadDashboard();
+fetchServerInfo().then(() => loadDashboard());
 subscribeSSE();
 </script>
 <!-- ══ QR CODE MODAL ══════════════════════════════════════════════════════ -->

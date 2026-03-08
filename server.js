@@ -2,14 +2,39 @@ const express  = require('express');
 const cors     = require('cors');
 const fs       = require('fs');
 const path     = require('path');
+const os       = require('os');
+const { Bonjour } = require('bonjour-service');
 
 const app       = express();
 const PORT      = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data', 'pm_data.json');
 
+// ── Resolve hostname & IPs ────────────────────────────────────────────────────
+const hostname   = os.hostname();          // e.g. CLAMASON-PC
+const localHost  = `${hostname}.local`;   // e.g. CLAMASON-PC.local
+
+function getLanIp() {
+  const nets = os.networkInterfaces();
+  for (const name of Object.keys(nets))
+    for (const net of nets[name])
+      if (net.family === 'IPv4' && !net.internal) return net.address;
+  return 'localhost';
+}
+
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// ── Server info endpoint ──────────────────────────────────────────────────────
+app.get('/api/server-info', (req, res) => {
+  res.json({
+    hostname:  localHost,
+    ip:        getLanIp(),
+    port:      PORT,
+    localUrl:  `http://${localHost}:${PORT}`,
+    ipUrl:     `http://${getLanIp()}:${PORT}`,
+  });
+});
 
 // ── SSE clients list ────────────────────────────────────────────────────────
 const sseClients = [];
@@ -224,13 +249,18 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  const { networkInterfaces } = require('os');
-  const nets = networkInterfaces();
+  const ip = getLanIp();
   console.log(`\n✅  PM Dashboard running at:`);
-  console.log(`   Local:   http://localhost:${PORT}`);
-  for (const name of Object.keys(nets))
-    for (const net of nets[name])
-      if (net.family === 'IPv4' && !net.internal)
-        console.log(`   Network: http://${net.address}:${PORT}  ← share with colleagues`);
-  console.log('\n');
+  console.log(`   Local:    http://localhost:${PORT}`);
+  console.log(`   Network:  http://${ip}:${PORT}`);
+  console.log(`   Hostname: http://${localHost}:${PORT}  ← use this — works on any WiFi!\n`);
+
+  // Register mDNS so the hostname resolves on the local network
+  try {
+    const bonjour = new Bonjour();
+    bonjour.publish({ name: 'Clamason PM Dashboard', type: 'http', port: PORT, host: localHost });
+    console.log(`   mDNS registered as: ${localHost}\n`);
+  } catch(e) {
+    console.log(`   mDNS not available: ${e.message}\n`);
+  }
 });
