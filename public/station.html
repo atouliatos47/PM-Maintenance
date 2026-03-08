@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<meta name="theme-color" content="#2D4A5C"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>Station Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Exo+2:wght@400;500;600&display=swap"/>
+<style>
+:root {
+  --bg:      #07111e;
+  --panel:   #0f2035;
+  --bg3:     #122436;
+  --border:  #1e3a52;
+  --accent:  #95C11F;
+  --gold:    #f5a623;
+  --red:     #e74c3c;
+  --cyan:    #00d4ff;
+  --green:   #27ae60;
+  --text:    #e8f4fd;
+  --muted:   #7a9bb5;
+  --fhead:   'Rajdhani', sans-serif;
+  --fbody:   'Exo 2', sans-serif;
+}
+*{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:var(--fbody); }
+
+/* ── SHELL ── */
+#app { display:flex; flex-direction:column; height:100vh; }
+
+/* ── HEADER ── */
+header {
+  display:flex; align-items:center; gap:12px;
+  padding:10px 16px; flex-shrink:0;
+  background:linear-gradient(135deg,#0a1f35,#102840);
+  border-bottom:3px solid var(--accent);
+}
+header img   { height:40px; }
+.hinfo       { flex:1; }
+.hinfo h1    { font-family:var(--fhead); font-size:clamp(16px,3vw,26px); font-weight:700; letter-spacing:2px; }
+.hinfo .hsub { font-size:11px; color:var(--muted); letter-spacing:1px; margin-top:2px; }
+.hstatus {
+  display:flex; align-items:center; gap:8px;
+  font-family:var(--fhead); font-size:14px; font-weight:700;
+  padding:8px 16px; border-radius:10px;
+  border:2px solid; letter-spacing:1px;
+  transition:all .3s;
+}
+.hstatus.running { color:var(--green);  border-color:var(--green);  background:rgba(39,174,96,0.1); }
+.hstatus.stopped { color:var(--red);    border-color:var(--red);    background:rgba(231,76,60,0.1); }
+.hstatus.pm      { color:var(--gold);   border-color:var(--gold);   background:rgba(245,166,35,0.1); }
+.dot { width:10px; height:10px; border-radius:50%; animation:pulse 1.5s infinite; }
+.dot.green  { background:var(--green); }
+.dot.red    { background:var(--red); }
+.dot.gold   { background:var(--gold); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ── INFO BAR ── */
+.info-bar {
+  display:flex; gap:10px; padding:8px 14px; flex-shrink:0;
+  background:var(--panel); border-bottom:1px solid var(--border);
+}
+.info-chip {
+  display:flex; flex-direction:column; align-items:center;
+  background:var(--bg3); border:1px solid var(--border);
+  border-radius:8px; padding:6px 14px; flex:1;
+}
+.info-chip .ic-label { font-size:9px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; }
+.info-chip .ic-val   { font-family:var(--fhead); font-size:18px; font-weight:700; color:var(--accent); }
+
+/* ── MAIN ── */
+main { flex:1; overflow:hidden; display:flex; flex-direction:column; gap:0; }
+
+/* ── SCREEN STATES ── */
+.screen { display:none; flex:1; flex-direction:column; padding:14px; gap:12px; overflow:hidden; }
+.screen.active { display:flex; }
+
+/* ════ RUNNING SCREEN ════ */
+.stop-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));
+  gap:12px; flex:1; align-content:start;
+  overflow-y:auto;
+}
+.stop-btn {
+  border:none; border-radius:16px; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:10px; transition:all .15s; position:relative; overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+.stop-btn:active { transform:scale(0.96); }
+.stop-btn::before {
+  content:''; position:absolute; inset:0;
+  background:rgba(255,255,255,0.05); opacity:0;
+  transition:opacity .15s;
+}
+.stop-btn:hover::before { opacity:1; }
+.stop-btn .sb-icon { font-size:clamp(36px,7vw,56px); }
+.stop-btn .sb-label {
+  font-family:var(--fhead); font-size:clamp(16px,3vw,24px);
+  font-weight:700; letter-spacing:2px; color:#fff;
+}
+.stop-btn .sb-sub { font-size:11px; color:rgba(255,255,255,0.6); letter-spacing:1px; }
+.btn-breakdown { background:linear-gradient(135deg,#c0392b,#96281b); border:2px solid #e74c3c; }
+.btn-material  { background:linear-gradient(135deg,#d47000,#b35900); border:2px solid #f5a623; }
+.btn-quality   { background:linear-gradient(135deg,#2176ae,#1a5f8a); border:2px solid #00d4ff; }
+.btn-other     { background:linear-gradient(135deg,#5a3f7a,#432d5e); border:2px solid #a855f7; }
+
+/* PM button — full width below the grid */
+.pm-btn-wrap { flex-shrink:0; }
+.btn-pm {
+  width:100%; padding:16px;
+  background:linear-gradient(135deg,#6d8f10,#95C11F);
+  border:2px solid var(--accent); border-radius:14px;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; gap:12px;
+  transition:all .15s;
+}
+.btn-pm:active { transform:scale(0.98); }
+.btn-pm .sb-icon  { font-size:28px; }
+.btn-pm .sb-label { font-family:var(--fhead); font-size:20px; font-weight:700; color:#fff; letter-spacing:2px; }
+.btn-pm .pm-date  { font-size:12px; color:rgba(255,255,255,0.7); margin-left:auto; }
+
+/* ════ STOPPED SCREEN ════ */
+.stopped-banner {
+  background:linear-gradient(135deg,rgba(231,76,60,0.2),rgba(231,76,60,0.05));
+  border:2px solid var(--red); border-radius:14px;
+  padding:16px; text-align:center; flex-shrink:0;
+}
+.stopped-banner .reason-icon { font-size:48px; margin-bottom:8px; }
+.stopped-banner .reason-text { font-family:var(--fhead); font-size:28px; font-weight:700; letter-spacing:3px; }
+.stopped-banner .reason-sub  { font-size:12px; color:var(--muted); margin-top:4px; letter-spacing:1px; }
+
+.timer-display {
+  text-align:center; flex-shrink:0;
+  font-family:var(--fhead); font-size:clamp(48px,10vw,80px);
+  font-weight:700; color:var(--red);
+  letter-spacing:4px;
+  text-shadow:0 0 30px rgba(231,76,60,0.4);
+}
+.timer-label { font-size:12px; color:var(--muted); letter-spacing:2px; text-align:center; margin-top:-8px; }
+
+.resume-btn {
+  width:100%; padding:20px; flex-shrink:0;
+  background:linear-gradient(135deg,var(--green),#1a7a40);
+  border:2px solid var(--green); border-radius:14px;
+  cursor:pointer; font-family:var(--fhead);
+  font-size:24px; font-weight:700; color:#fff;
+  letter-spacing:3px; display:flex; align-items:center;
+  justify-content:center; gap:12px;
+  transition:all .15s; margin-top:auto;
+}
+.resume-btn:active { transform:scale(0.98); }
+
+/* ════ PM SCREEN ════ */
+.pm-screen-content {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:20px; flex:1; text-align:center;
+}
+.pm-screen-content h2 { font-family:var(--fhead); font-size:28px; letter-spacing:3px; color:var(--gold); }
+.pm-screen-content .pm-icon { font-size:64px; }
+.pm-form { display:flex; flex-direction:column; gap:12px; width:100%; max-width:400px; }
+.pm-form label { font-size:11px; color:var(--muted); letter-spacing:1px; text-align:left; }
+.pm-form input {
+  background:var(--bg3); border:2px solid var(--border);
+  color:var(--text); border-radius:10px;
+  padding:14px 16px; font-family:var(--fbody);
+  font-size:16px; width:100%;
+}
+.pm-form input:focus { outline:none; border-color:var(--gold); }
+.pm-start-btn {
+  width:100%; padding:18px;
+  background:linear-gradient(135deg,#d47000,#f5a623);
+  border:2px solid var(--gold); border-radius:12px;
+  color:#fff; font-family:var(--fhead); font-size:20px;
+  font-weight:700; letter-spacing:2px; cursor:pointer;
+  transition:all .15s;
+}
+.pm-start-btn:active { transform:scale(0.98); }
+
+/* ════ PM RUNNING SCREEN ════ */
+.pm-running {
+  display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:20px; flex:1; text-align:center;
+}
+.pm-running .who  { font-size:14px; color:var(--muted); letter-spacing:1px; }
+.pm-running .name { font-family:var(--fhead); font-size:32px; color:var(--gold); font-weight:700; }
+.pm-timer { font-family:var(--fhead); font-size:clamp(48px,10vw,80px); font-weight:700; color:var(--gold); letter-spacing:4px; text-shadow:0 0 30px rgba(245,166,35,0.4); }
+
+.pm-complete-wrap { display:flex; flex-direction:column; gap:10px; width:100%; flex-shrink:0; }
+.pm-complete-wrap label { font-size:11px; color:var(--muted); letter-spacing:1px; }
+.pm-complete-wrap input {
+  background:var(--bg3); border:2px solid var(--border);
+  color:var(--text); border-radius:10px;
+  padding:12px 16px; font-family:var(--fbody); font-size:16px; width:100%;
+}
+.pm-complete-wrap input:focus { outline:none; border-color:var(--accent); }
+.pm-done-btn {
+  width:100%; padding:18px;
+  background:linear-gradient(135deg,var(--accent),#6d8f10);
+  border:2px solid var(--accent); border-radius:12px;
+  color:#fff; font-family:var(--fhead); font-size:20px;
+  font-weight:700; letter-spacing:2px; cursor:pointer;
+  transition:all .15s;
+}
+.pm-done-btn:active { transform:scale(0.98); }
+
+/* ── STOPPAGE LOG ── */
+.log-panel {
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:12px; flex-shrink:0; max-height:160px;
+  overflow-y:auto;
+}
+.log-panel h3 {
+  font-family:var(--fhead); font-size:11px; color:var(--muted);
+  letter-spacing:2px; padding:8px 12px;
+  border-bottom:1px solid var(--border); text-transform:uppercase;
+}
+.log-item {
+  display:flex; align-items:center; gap:10px;
+  padding:7px 12px; border-top:1px solid rgba(30,58,82,0.4);
+  font-size:11px;
+}
+.log-item .li-icon  { font-size:16px; flex-shrink:0; }
+.log-item .li-reason{ font-weight:600; color:var(--text); flex:1; }
+.log-item .li-dur   { color:var(--accent); font-family:var(--fhead); font-size:13px; white-space:nowrap; }
+.log-item .li-time  { color:var(--muted); white-space:nowrap; }
+
+/* ── CUSTOM REASONS OVERLAY ── */
+.overlay-bg {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.75); z-index:500;
+  align-items:flex-end; justify-content:center;
+}
+.overlay-bg.open { display:flex; }
+.overlay-sheet {
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:20px 20px 0 0; width:100%; max-height:85vh;
+  overflow-y:auto; padding:20px 16px 32px;
+  display:flex; flex-direction:column; gap:12px;
+}
+.overlay-title {
+  font-family:var(--fhead); font-size:16px; font-weight:700;
+  letter-spacing:2px; color:var(--muted); text-align:center;
+  padding-bottom:12px; border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.custom-reasons-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.custom-btn {
+  background:linear-gradient(135deg,#2a3f55,#1e3045);
+  border:2px solid #a855f7; border-radius:12px;
+  padding:16px 10px; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  transition:all .15s; position:relative;
+}
+.custom-btn:active { transform:scale(0.96); }
+.custom-btn .cb-icon  { font-size:28px; }
+.custom-btn .cb-label { font-family:var(--fhead); font-size:14px; font-weight:700; color:#fff; letter-spacing:1px; text-align:center; }
+.custom-btn .cb-del   { position:absolute; top:6px; right:8px; background:none; border:none; color:rgba(255,255,255,0.3); font-size:14px; cursor:pointer; padding:2px; }
+.custom-btn .cb-del:hover { color:var(--red); }
+.add-new-btn {
+  width:100%; padding:14px; background:none;
+  border:2px dashed var(--border); border-radius:12px; color:var(--muted);
+  font-family:var(--fhead); font-size:15px; letter-spacing:2px; cursor:pointer;
+  transition:all .2s; display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.add-new-btn:hover { border-color:var(--accent); color:var(--accent); }
+.new-reason-form {
+  display:none; flex-direction:column; gap:10px;
+  background:var(--bg3); border:1px solid var(--border); border-radius:12px; padding:14px;
+}
+.new-reason-form.open { display:flex; }
+.new-reason-form input {
+  background:var(--bg); border:2px solid var(--border);
+  color:var(--text); border-radius:8px; padding:12px 14px;
+  font-family:var(--fbody); font-size:15px;
+}
+.new-reason-form input:focus { outline:none; border-color:var(--accent); }
+.new-reason-form .nrf-row { display:flex; gap:8px; }
+.nrf-save { flex:1; padding:12px; background:linear-gradient(135deg,var(--accent),#6d8f10); border:none; border-radius:8px; color:#fff; font-family:var(--fhead); font-size:14px; font-weight:700; letter-spacing:1px; cursor:pointer; }
+.nrf-cancel { padding:12px 16px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--muted); font-family:var(--fbody); font-size:13px; cursor:pointer; }
+.overlay-cancel { width:100%; padding:14px; background:none; border:1px solid var(--border); border-radius:12px; color:var(--muted); font-family:var(--fhead); font-size:14px; letter-spacing:1px; cursor:pointer; }
+
+/* ── TOAST ── */
+#toast {
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  background:var(--accent); color:#fff; padding:12px 28px;
+  border-radius:10px; font-weight:700; font-size:14px;
+  z-index:9999; opacity:0; transition:opacity .3s; white-space:nowrap;
+  box-shadow:0 8px 24px rgba(149,193,31,0.4);
+}
+#toast.show { opacity:1; }
+
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <header>
+    <img src="/logo.png" alt="Clamason"/>
+    <div class="hinfo">
+      <h1 id="stationName">Loading...</h1>
+      <div class="hsub" id="stationType">STATION MONITOR</div>
+    </div>
+    <div class="hstatus running" id="statusBadge">
+      <div class="dot green" id="statusDot"></div>
+      <span id="statusText">RUNNING</span>
+    </div>
+  </header>
+
+  <!-- INFO BAR -->
+  <div class="info-bar">
+    <div class="info-chip">
+      <span class="ic-label">Next PM</span>
+      <span class="ic-val" id="nextPm">—</span>
+    </div>
+    <div class="info-chip">
+      <span class="ic-label">Stoppages Today</span>
+      <span class="ic-val" id="stoppagesToday">0</span>
+    </div>
+    <div class="info-chip">
+      <span class="ic-label">Downtime Today</span>
+      <span class="ic-val" id="downtimeToday">0 min</span>
+    </div>
+    <div class="info-chip">
+      <span class="ic-label">Last Stoppage</span>
+      <span class="ic-val" id="lastStoppage">—</span>
+    </div>
+  </div>
+
+  <main>
+
+    <!-- ═════ RUNNING SCREEN ═════ -->
+    <div id="screen-running" class="screen active" style="padding-bottom:10px;">
+      <!-- All stop buttons rendered dynamically here -->
+      <div id="stopButtonsGrid" class="stop-grid"></div>
+      <div class="pm-btn-wrap">
+        <button class="btn-pm" onclick="showPmScreen()">
+          <div class="sb-icon">✅</div>
+          <div class="sb-label">PREVENTIVE MAINTENANCE</div>
+          <div class="pm-date" id="pmDateLabel"></div>
+        </button>
+      </div>
+      <div class="log-panel">
+        <h3>Today's Stoppages</h3>
+        <div id="logList"></div>
+      </div>
+    </div>
+
+    <!-- ═════ STOPPED SCREEN ═════ -->
+    <div id="screen-stopped" class="screen">
+      <div class="stopped-banner">
+        <div class="reason-icon" id="stopIcon">🔧</div>
+        <div class="reason-text" id="stopReason">BREAKDOWN</div>
+        <div class="reason-sub" id="stopOperator">Operator: —</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;justify-content:center;flex-shrink:0;">
+        <div class="timer-display" id="stopTimer" style="margin:0;">00:00</div>
+        <button class="resume-btn" onclick="endStop()" style="flex-shrink:0;width:auto;padding:16px 24px;font-size:16px;margin:0;">
+          ▶ RESUME
+        </button>
+      </div>
+      <div class="timer-label">DOWNTIME ELAPSED</div>
+      <div class="log-panel" style="flex:1;max-height:none;">
+        <h3>Today's Stoppages</h3>
+        <div id="logListStopped"></div>
+      </div>
+    </div>
+
+    <!-- ═════ PM ENTRY SCREEN ═════ -->
+    <div id="screen-pm" class="screen">
+      <div class="pm-screen-content">
+        <div class="pm-icon">🛠️</div>
+        <h2>PREVENTIVE MAINTENANCE</h2>
+        <div class="pm-form">
+          <label>YOUR NAME (Technician)</label>
+          <input type="text" id="pmOperatorName" placeholder="Enter your name..." autocomplete="off"/>
+          <button class="pm-start-btn" onclick="startPm()">START PM ▶</button>
+          <button onclick="showScreen('running')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:4px;">← Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═════ PM RUNNING SCREEN ═════ -->
+    <div id="screen-pm-running" class="screen">
+      <div class="pm-running">
+        <div class="pm-icon">🛠️</div>
+        <div class="who">PM IN PROGRESS — TECHNICIAN</div>
+        <div class="name" id="pmTechName">—</div>
+        <div class="pm-timer" id="pmTimer">00:00</div>
+        <div style="font-size:11px;color:var(--muted);letter-spacing:1px;">ELAPSED TIME</div>
+      </div>
+      <div class="pm-complete-wrap">
+        <label>SET NEXT PM DATE (required to complete)</label>
+        <input type="date" id="pmNextDate"/>
+        <button class="pm-done-btn" onclick="completePm()">✅ PM COMPLETE — RESET SCHEDULE</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══ ADD CUSTOM REASON OVERLAY ══════════════════════════════════════ -->
+<div class="overlay-bg" id="otherOverlay">
+  <div class="overlay-sheet">
+    <div class="overlay-title">＋ ADD CUSTOM STOP REASON</div>
+    <div class="new-reason-form open" id="newReasonForm" style="display:flex;">
+      <label style="font-size:11px;color:var(--muted);letter-spacing:1px;">REASON NAME</label>
+      <input type="text" id="newReasonLabel" placeholder="e.g. Changeover, No Operator..." maxlength="30"/>
+      <label style="font-size:11px;color:var(--muted);letter-spacing:1px;">ICON (paste any emoji)</label>
+      <input type="text" id="newReasonIcon" placeholder="⏸️" maxlength="4" style="font-size:24px;text-align:center;"/>
+      <div class="nrf-row">
+        <button class="nrf-cancel" onclick="closeOtherOverlay()">Cancel</button>
+        <button class="nrf-save" onclick="saveNewReason()">SAVE &amp; USE NOW</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+const stationId  = location.pathname.replace('/station/', '').trim();
+let   stationData = null;
+let   stopInterval = null;
+let   pmInterval   = null;
+let   stopStartTime = null;
+let   pmStartTime   = null;
+
+async function init() {
+  const stations = await fetch('/api/stations').then(r => r.json());
+  stationData = stations.find(s => s.id === stationId);
+  if (!stationData) {
+    document.getElementById('stationName').textContent = 'Station Not Found';
+    return;
+  }
+  renderStopButtons();   // ← build the dynamic grid
+  renderStation();
+  loadTodayLog();
+  subscribeSSE();
+
+  // Set default next PM date to today+1 month
+  const d = new Date(); d.setMonth(d.getMonth()+1);
+  document.getElementById('pmNextDate').value = d.toISOString().split('T')[0];
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════
+function renderStation() {
+  document.title = stationData.name + ' — Station Monitor';
+  document.getElementById('stationName').textContent = stationData.name;
+  document.getElementById('stationType').textContent = stationData.type + ' · STATION MONITOR';
+  const nextPm = stationData.nextPmDate
+    ? new Date(stationData.nextPmDate).toLocaleDateString('en-GB',{day:'2-digit',month:'short'})
+    : '—';
+  document.getElementById('nextPm').textContent    = nextPm;
+  document.getElementById('pmDateLabel').textContent = 'Next PM: ' + nextPm;
+
+  if (stationData.status === 'stopped' && stationData.currentStoppage) {
+    const s = stationData.currentStoppage;
+    if (s.reason === 'pm') {
+      showPmRunning(s.operator, new Date(s.startTime));
+    } else {
+      showStopped(s);
+    }
+  } else {
+    showScreen('running');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// SCREENS
+// ═══════════════════════════════════════════════════
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+}
+
+function updateStatusBadge(state) {
+  const badge = document.getElementById('statusBadge');
+  const dot   = document.getElementById('statusDot');
+  const text  = document.getElementById('statusText');
+  badge.className = 'hstatus ' + state;
+  if      (state === 'running') { dot.className='dot green'; text.textContent='RUNNING'; }
+  else if (state === 'pm')      { dot.className='dot gold';  text.textContent='PM IN PROGRESS'; }
+  else                          { dot.className='dot red';   text.textContent='STOPPED'; }
+}
+
+// ═══════════════════════════════════════════════════
+// STOP REASONS
+// ═══════════════════════════════════════════════════
+const REASON_META = {
+  breakdown:   { icon:'🔧', label:'BREAKDOWN',    color:'var(--red)' },
+  no_material: { icon:'📦', label:'NO MATERIAL',  color:'var(--gold)' },
+  quality:     { icon:'⚠️', label:'QUALITY ISSUE',color:'var(--cyan)' },
+  pm:          { icon:'🛠️', label:'PM',           color:'var(--gold)' },
+  other:       { icon:'⏸️', label:'OTHER STOP',   color:'#a855f7' }
+};
+
+function triggerStop(reason) {
+  const operator = prompt('Your name:') || 'Operator';
+  if (!operator) return;
+  startStop(reason, operator);
+}
+
+async function startStop(reason, operator, notes='') {
+  await fetch('/api/stoppages/start', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ stationId, reason, operator, notes })
+  });
+  const meta = { reason, operator, startTime: new Date().toISOString() };
+  showStopped(meta);
+  toast('⛔ ' + (REASON_META[reason]?.label || reason.toUpperCase()) + ' logged');
+}
+
+function showStopped(stoppage) {
+  const meta = REASON_META[stoppage.reason] || REASON_META.other;
+  document.getElementById('stopIcon').textContent    = meta.icon;
+  document.getElementById('stopReason').textContent  = meta.label;
+  document.getElementById('stopOperator').textContent = 'Operator: ' + (stoppage.operator||'Unknown');
+  showScreen('stopped');
+  updateStatusBadge('stopped');
+
+  stopStartTime = new Date(stoppage.startTime);
+  clearInterval(stopInterval);
+  stopInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - stopStartTime) / 1000);
+    document.getElementById('stopTimer').textContent = formatTime(elapsed);
+  }, 1000);
+  loadTodayLog();
+}
+
+async function endStop() {
+  clearInterval(stopInterval);
+  await fetch('/api/stoppages/end', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ stationId })
+  });
+  showScreen('running');
+  updateStatusBadge('running');
+  toast('✅ Machine running — stoppage logged');
+  loadTodayLog();
+}
+
+// ═══════════════════════════════════════════════════
+// PM FLOW
+// ═══════════════════════════════════════════════════
+function showPmScreen() {
+  document.getElementById('pmOperatorName').value = '';
+  showScreen('pm');
+}
+
+async function startPm() {
+  const name = document.getElementById('pmOperatorName').value.trim();
+  if (!name) { toast('⚠️ Please enter your name'); return; }
+  await startStop('pm', name);
+  showPmRunning(name, new Date());
+}
+
+function showPmRunning(name, startTime) {
+  document.getElementById('pmTechName').textContent = name;
+  showScreen('pm-running');
+  updateStatusBadge('pm');
+  pmStartTime = startTime;
+  clearInterval(pmInterval);
+  pmInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - pmStartTime) / 1000);
+    document.getElementById('pmTimer').textContent = formatTime(elapsed);
+  }, 1000);
+}
+
+async function completePm() {
+  const nextDate = document.getElementById('pmNextDate').value;
+  if (!nextDate) { toast('⚠️ Please set the next PM date'); return; }
+  clearInterval(pmInterval);
+  await fetch('/api/stoppages/end', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ stationId, nextPmDate: nextDate })
+  });
+  // Update local display
+  const fmt = new Date(nextDate).toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+  document.getElementById('nextPm').textContent    = fmt;
+  document.getElementById('pmDateLabel').textContent = 'Next PM: ' + fmt;
+  showScreen('running');
+  updateStatusBadge('running');
+  toast('✅ PM complete! Next PM set to ' + fmt);
+  loadTodayLog();
+}
+
+// ═══════════════════════════════════════════════════
+// TODAY'S LOG
+// ═══════════════════════════════════════════════════
+async function loadTodayLog() {
+  const all = await fetch('/api/stoppages?stationId=' + stationId).then(r => r.json());
+  const today = new Date().toDateString();
+  const todayStoppages = all.filter(s => new Date(s.startTime).toDateString() === today);
+
+  const totalDown = todayStoppages.filter(s=>s.duration).reduce((a,s)=>a+s.duration,0);
+  document.getElementById('stoppagesToday').textContent = todayStoppages.length;
+  document.getElementById('downtimeToday').textContent  = totalDown + ' min';
+
+  const last = todayStoppages.filter(s=>s.duration).slice(-1)[0];
+  document.getElementById('lastStoppage').textContent = last
+    ? REASON_META[last.reason]?.label.split(' ')[0] || last.reason
+    : '—';
+
+  const html = todayStoppages.slice().reverse().map(s => {
+    const meta = REASON_META[s.reason] || REASON_META.other;
+    const t    = new Date(s.startTime).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    const dur  = s.duration != null ? s.duration + ' min' : 'ongoing';
+    return `<div class="log-item">
+      <span class="li-icon">${meta.icon}</span>
+      <span class="li-reason">${meta.label}</span>
+      <span class="li-time">${t}</span>
+      <span class="li-dur">${dur}</span>
+    </div>`;
+  }).join('') || '<div style="padding:10px 12px;font-size:11px;color:var(--muted)">No stoppages today</div>';
+
+  document.getElementById('logList').innerHTML        = html;
+  document.getElementById('logListStopped').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════
+// SSE  –  listen for updates from other stations
+// ═══════════════════════════════════════════════════
+function subscribeSSE() {
+  const es = new EventSource('/api/events');
+  es.addEventListener('stations', e => {
+    const stations = JSON.parse(e.data);
+    stationData = stations.find(s => s.id === stationId);
+    if (stationData) {
+      const nextPm = stationData.nextPmDate
+        ? new Date(stationData.nextPmDate).toLocaleDateString('en-GB',{day:'2-digit',month:'short'})
+        : '—';
+      document.getElementById('nextPm').textContent = nextPm;
+    }
+    loadTodayLog();
+  });
+  es.onerror = () => setTimeout(subscribeSSE, 3000);
+}
+
+// ═══════════════════════════════════════════════════
+// CUSTOM REASONS  (stored in localStorage per station)
+// ═══════════════════════════════════════════════════
+const STORAGE_KEY = 'custom_reasons_' + stationId;
+
+const FIXED_BUTTONS = [
+  { id:'breakdown',   icon:'🔧', label:'BREAKDOWN',   sub:'Machine fault / repair', cls:'btn-breakdown' },
+  { id:'no_material', icon:'📦', label:'NO MATERIAL',  sub:'Waiting for stock',      cls:'btn-material'  },
+  { id:'quality',     icon:'⚠️', label:'QUALITY',      sub:'Quality issue / reject', cls:'btn-quality'   },
+];
+
+function loadCustomReasons() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch { return []; }
+}
+
+function saveCustomReasons(reasons) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(reasons));
+}
+
+function renderStopButtons() {
+  const custom = loadCustomReasons();
+  const grid   = document.getElementById('stopButtonsGrid');
+
+  // Fixed buttons
+  const fixedHtml = FIXED_BUTTONS.map(b => `
+    <button class="stop-btn ${b.cls}" onclick="triggerStop('${b.id}')">
+      <div class="sb-icon">${b.icon}</div>
+      <div class="sb-label">${b.label}</div>
+      <div class="sb-sub">${b.sub}</div>
+    </button>`).join('');
+
+  // Custom buttons — each with a delete ✕
+  const customHtml = custom.map(r => `
+    <button class="stop-btn btn-other" onclick="triggerCustomStop('${r.id}','${r.label}','${r.icon}')" style="position:relative;">
+      <span onclick="deleteCustomReason(event,'${r.id}')" style="position:absolute;top:8px;right:10px;font-size:13px;color:rgba(255,255,255,0.3);cursor:pointer;z-index:2;" title="Remove">✕</span>
+      <div class="sb-icon">${r.icon}</div>
+      <div class="sb-label">${r.label.toUpperCase()}</div>
+      <div class="sb-sub">Custom reason</div>
+    </button>`).join('');
+
+  // Add new button — always last
+  const addHtml = `
+    <button class="stop-btn" onclick="showOtherOverlay()"
+      style="background:linear-gradient(135deg,#1a2f42,#152535);border:2px dashed var(--border);opacity:0.8;">
+      <div class="sb-icon">＋</div>
+      <div class="sb-label" style="font-size:16px;color:var(--muted);">ADD REASON</div>
+      <div class="sb-sub">Create custom stop</div>
+    </button>`;
+
+  grid.innerHTML = fixedHtml + customHtml + addHtml;
+}
+
+function triggerCustomStop(id, label, icon) {
+  closeOtherOverlay();
+  const operator = prompt('Your name:') || 'Operator';
+  if (!operator) return;
+  REASON_META[id] = { icon, label: label.toUpperCase(), color: '#a855f7' };
+  startStop(id, operator);
+}
+
+function deleteCustomReason(e, id) {
+  e.stopPropagation();
+  if (!confirm('Remove this reason button?')) return;
+  const reasons = loadCustomReasons().filter(r => r.id !== id);
+  saveCustomReasons(reasons);
+  renderStopButtons();
+}
+
+function showOtherOverlay() {
+  document.getElementById('newReasonLabel').value = '';
+  document.getElementById('newReasonIcon').value  = '⏸️';
+  hideNewReasonForm();
+  document.getElementById('otherOverlay').classList.add('open');
+}
+
+function closeOtherOverlay() {
+  document.getElementById('otherOverlay').classList.remove('open');
+}
+
+function showNewReasonForm() {
+  document.getElementById('newReasonForm').classList.add('open');
+  document.getElementById('newReasonLabel').focus();
+}
+
+function hideNewReasonForm() {
+  document.getElementById('newReasonForm').classList.remove('open');
+}
+
+function saveNewReason() {
+  const label = document.getElementById('newReasonLabel').value.trim();
+  const icon  = document.getElementById('newReasonIcon').value.trim() || '⏸️';
+  if (!label) { toast('⚠️ Please enter a reason name'); return; }
+  const id      = label.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'') + '-' + Date.now();
+  const reasons = loadCustomReasons();
+  reasons.push({ id, icon, label });
+  saveCustomReasons(reasons);
+  renderStopButtons();       // update main grid immediately
+  triggerCustomStop(id, label, icon);
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+function formatTime(secs) {
+  const m = String(Math.floor(secs/60)).padStart(2,'0');
+  const s = String(secs % 60).padStart(2,'0');
+  return m + ':' + s;
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+init();
+</script>
+</body>
+</html>

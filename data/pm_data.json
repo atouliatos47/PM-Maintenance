@@ -1,0 +1,418 @@
+{
+  "jobs": [
+    {
+      "id": 1,
+      "machine": "Press 01",
+      "task": "Oil Change",
+      "frequency": "Monthly",
+      "planned": "2026-01-05",
+      "completed": "2026-01-05",
+      "status": "completed",
+      "technician": "John",
+      "cost": 120,
+      "duration": 4.5
+    },
+    {
+      "id": 2,
+      "machine": "Press 02",
+      "task": "Belt Inspection",
+      "frequency": "Weekly",
+      "planned": "2026-01-08",
+      "completed": "2026-01-09",
+      "status": "completed",
+      "technician": "Mike",
+      "cost": 80,
+      "duration": 3
+    },
+    {
+      "id": 3,
+      "machine": "Press 03",
+      "task": "Filter Replace",
+      "frequency": "Quarterly",
+      "planned": "2026-01-10",
+      "completed": "2026-01-10",
+      "status": "completed",
+      "technician": "John",
+      "cost": 55,
+      "duration": 2
+    },
+    {
+      "id": 4,
+      "machine": "Press 04",
+      "task": "Lubrication",
+      "frequency": "Weekly",
+      "planned": "2026-01-12",
+      "completed": null,
+      "status": "overdue",
+      "technician": "Sarah",
+      "cost": 40,
+      "duration": null
+    },
+    {
+      "id": 5,
+      "machine": "Welder 01",
+      "task": "Electrode Check",
+      "frequency": "Monthly",
+      "planned": "2026-01-14",
+      "completed": "2026-01-14",
+      "status": "completed",
+      "technician": "Mike",
+      "cost": 90,
+      "duration": 5
+    },
+    {
+      "id": 6,
+      "machine": "Welder 02",
+      "task": "Gas Calibration",
+      "frequency": "Quarterly",
+      "planned": "2026-01-15",
+      "completed": "2026-01-16",
+      "status": "completed",
+      "technician": "Sarah",
+      "cost": 110,
+      "duration": 6
+    },
+    {
+      "id": 7,
+      "machine": "Robot 01",
+      "task": "Axis Calibration",
+      "frequency": "Annual",
+      "planned": "2026-01-18",
+      "completed": "2026-01-18",
+      "status": "completed",
+      "technician": "John",
+      "cost": 200,
+      "duration": 8
+    },
+    {
+      "id": 8,
+      "machine": "Robot 02",
+      "task": "Cable Inspection",
+      "frequency": "Monthly",
+      "planned": "2026-01-20",
+      "completed": null,
+      "status": "overdue",
+      "technician": "Mike",
+      "cost": 150,
+      "duration": null
+    },
+    {
+      "id": 9,
+      "machine": "Press 05",
+      "task": "Hydraulic Check",
+      "frequency": "Monthly",
+      "planned": "2026-01-22",
+      "completed": "2026-01-22",
+      "status": "completed",
+      "technician": "Sarah",
+      "cost": 175,
+      "duration": 7
+    },
+    {
+      "id": 10,
+      "machine": "Press 06",
+      "task": "Die Alignment",
+      "frequency": "6-Monthly",
+      "planned": "2026-01-25",
+      "completed": "2026-01-24",
+      "status": "completed",
+      "technician": "John",
+      "cost": 95,
+      "duration": 4
+    },
+    {
+      "id": 11,
+      "machine": "Conveyor 01",
+      "task": "Tension Check",
+      "frequency": "Weekly",
+      "planned": "2026-01-28",
+      "completed": "2026-01-28",
+      "status": "completed",
+      "technician": "Mike",
+      "cost": 60,
+      "duration": 3.5
+    },
+    {
+      "id": 12,
+      "machine": "Conveyor 02",
+      "task": "Motor Inspect",
+      "frequency": "Quarterly",
+      "planned": "2026-01-30",
+      "completed": null,
+      "status": "overdue",
+      "technician": "Sarah",
+      "cost": 130,
+      "duration": null
+    },
+    {
+      "id": 13,
+      "machine": "Press 07",
+      "task": "Oil Change",
+      "frequency": "Monthly",
+      "planned": "2026-02-02",
+      "completed": "2026-02-02",
+      "status": "completed",
+      "technician": "John",
+      "cost": 120,
+      "duration": 4.5
+    },
+    {
+      "id": 14,
+      "machine": "Press 08",
+      "task": "Seal Replace",
+      "frequency": "6-Monthly",
+      "planned": "2026-02-04",
+      "completed": "2026-02-05",
+      "status": "completed",
+      "technician": "Mike",
+      "cost": 85,
+      "duration": 5
+    },
+    {
+      "id": 15,
+      "machine": "Welder 03",
+      "task": "Torch Clean",
+      "frequency": "Weekly",
+      "planned": "2026-02-06",
+      "completed": null,
+      "status": "overdue",
+      "technician": "Sarah",
+      "cost": 45,
+      "duration": null
+    },
+    {
+      "id": 16,
+      "machine": "Robot 03",
+      "task": "Software Update",
+      "frequency": "Annual",
+      "planned": "2026-02-08",
+      "completed": "2026-02-08",
+      "status": "completed",
+      "technician": "John",
+      "cost": 0,
+      "duration": 3
+    },
+    {
+      "id": 17,
+      "machine": "Press 09",
+      "task": "Lubrication",
+      "frequency": "Weekly",
+      "planned": "2026-02-10",
+      "completed": "2026-02-10",
+      "status": "completed",
+      "technician": "Mike",
+      "cost": 40,
+      "duration": 2
+    },
+    {
+      "id": 18,
+      "machine": "Press 10",
+      "task": "Filter Replace",
+      "frequency": "Quarterly",
+      "planned": "2026-02-12",
+      "completed": "2026-02-12",
+      "status": "completed",
+      "technician": "Sarah",
+      "cost": 55,
+      "duration": 2.5
+    },
+    {
+      "id": 19,
+      "machine": "Conveyor 03",
+      "task": "Belt Replace",
+      "frequency": "Annual",
+      "planned": "2026-02-14",
+      "completed": null,
+      "status": "overdue",
+      "technician": "John",
+      "cost": 220,
+      "duration": null
+    },
+    {
+      "id": 20,
+      "machine": "Welder 04",
+      "task": "Wire Feed Check",
+      "frequency": "Monthly",
+      "planned": "2026-02-16",
+      "completed": "2026-02-16",
+      "status": "completed",
+      "technician": "Mike",
+      "cost": 70,
+      "duration": 3
+    }
+  ],
+  "weeklyData": [
+    {
+      "week": "1 Jan",
+      "planned": 300,
+      "completed": 285,
+      "plannedCost": 8000,
+      "actualCost": 7200
+    },
+    {
+      "week": "8 Jan",
+      "planned": 310,
+      "completed": 298,
+      "plannedCost": 7500,
+      "actualCost": 8100
+    },
+    {
+      "week": "15 Jan",
+      "planned": 295,
+      "completed": 290,
+      "plannedCost": 8200,
+      "actualCost": 7800
+    },
+    {
+      "week": "22 Jan",
+      "planned": 320,
+      "completed": 305,
+      "plannedCost": 7800,
+      "actualCost": 8500
+    },
+    {
+      "week": "29 Jan",
+      "planned": 280,
+      "completed": 260,
+      "plannedCost": 8400,
+      "actualCost": 8200
+    },
+    {
+      "week": "5 Feb",
+      "planned": 315,
+      "completed": 308,
+      "plannedCost": 7600,
+      "actualCost": 7900
+    },
+    {
+      "week": "12 Feb",
+      "planned": 290,
+      "completed": 121,
+      "plannedCost": 8100,
+      "actualCost": 8300
+    }
+  ],
+  "complianceTrend": [
+    {
+      "label": "1-5 Jan",
+      "rate": 94.2
+    },
+    {
+      "label": "6-10 Jan",
+      "rate": 93.8
+    },
+    {
+      "label": "11-15 Jan",
+      "rate": 95.1
+    },
+    {
+      "label": "16-20 Jan",
+      "rate": 94.5
+    },
+    {
+      "label": "21-25 Jan",
+      "rate": 93.9
+    },
+    {
+      "label": "26-30 Jan",
+      "rate": 92.8
+    },
+    {
+      "label": "1-5 Feb",
+      "rate": 95.3
+    },
+    {
+      "label": "6-10 Feb",
+      "rate": 94.8
+    },
+    {
+      "label": "11-14 Feb",
+      "rate": 94.1
+    }
+  ],
+  "overdueBreakdown": [
+    {
+      "label": "1-8 Jan",
+      "count": 24
+    },
+    {
+      "label": "9-16 Jan",
+      "count": 24
+    },
+    {
+      "label": "17-24 Jan",
+      "count": 23
+    },
+    {
+      "label": "25 Jan-1 Feb",
+      "count": 21
+    },
+    {
+      "label": "2-8 Feb",
+      "count": 25
+    },
+    {
+      "label": "9-14 Feb",
+      "count": 10
+    }
+  ],
+  "stations": [
+    {
+      "id": "press-01",
+      "name": "Press 01",
+      "type": "Press",
+      "nextPmDate": "2026-03-15",
+      "status": "running",
+      "currentStoppage": null
+    },
+    {
+      "id": "press-02",
+      "name": "Press 02",
+      "type": "Press",
+      "nextPmDate": "2026-03-20",
+      "status": "running",
+      "currentStoppage": null
+    },
+    {
+      "id": "press-03",
+      "name": "Press 03",
+      "type": "Press",
+      "nextPmDate": "2026-04-01",
+      "status": "running",
+      "currentStoppage": null
+    },
+    {
+      "id": "welder-01",
+      "name": "Welder 01",
+      "type": "Welder",
+      "nextPmDate": "2026-03-18",
+      "status": "running",
+      "currentStoppage": null
+    },
+    {
+      "id": "welder-02",
+      "name": "Welder 02",
+      "type": "Welder",
+      "nextPmDate": "2026-03-25",
+      "status": "running",
+      "currentStoppage": null
+    },
+    {
+      "id": "robot-01",
+      "name": "Robot 01",
+      "type": "Robot",
+      "nextPmDate": "2026-04-10",
+      "status": "running",
+      "currentStoppage": null
+    },
+    {
+      "id": "conveyor-01",
+      "name": "Conveyor 01",
+      "type": "Conveyor",
+      "nextPmDate": "2026-03-30",
+      "status": "running",
+      "currentStoppage": null
+    }
+  ],
+  "stoppages": []
+}
